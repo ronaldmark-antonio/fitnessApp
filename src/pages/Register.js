@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Card, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { Notyf } from 'notyf';
 import 'notyf/notyf.min.css';
@@ -7,7 +7,7 @@ import logo from '../images/fitverse-logo.png';
 
 export default function Register() {
 
-  const notyf = useRef(new Notyf()).current; 
+  const notyf = useRef(new Notyf({ duration: 2000, ripple: true })).current; 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,9 +21,11 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isActive, setIsActive] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const registerUser = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const res = await fetch('https://fitnessapi-antonio.onrender.com/users/register', {
@@ -35,25 +37,28 @@ export default function Register() {
       const data = await res.json();
 
       if (data.message === 'Registered Successfully') {
-	        notyf.success('Registration Successful!');
-	        	
-	        setEmail('');
-	        setPassword('');
-	        setConfirmPassword('');
-	        
-	        navigate('/login');
+        	
+        	notyf.success('Registration Successful!');
+        	
+        	setEmail('');
+        	setPassword('');
+        	setConfirmPassword('');
+        
+        	navigate('/login');
 
       } else if (data.error === 'Password must be atleast 8 characters') {
-        		
-        	notyf.error('Password must be at least 8 characters');
+       		
+       		notyf.error('Password must be at least 8 characters');
 
       } else {
 
-        notyf.error('Something went wrong. Please try again.');
+        	notyf.error('Something went wrong. Please try again.');
       }
 
     } catch {
       	notyf.error('Network error. Please try again.');
+    } finally {
+      	setLoading(false);
     }
   };
 
@@ -66,9 +71,7 @@ export default function Register() {
   return (
     <div
       className="d-flex align-items-center justify-content-center min-vh-100"
-      style={{
-        background: 'rgb(255, 255, 255)',
-      }}
+      style={{ background: 'rgb(255, 255, 255)' }}
     >
       <Container>
         <Row className="justify-content-center">
@@ -125,11 +128,24 @@ export default function Register() {
                     <Button
                       variant="primary"
                       type="submit"
-                      disabled={!isActive}
+                      disabled={!isActive || loading}
                       size="lg"
                       className="rounded-3"
                     >
-                      Submit
+                      {loading ? (
+                        <>
+                          <Spinner
+                            as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                          />{' '}
+                          Registering...
+                        </>
+                      ) : (
+                        'Submit'
+                      )}
                     </Button>
                   </div>
                 </Form>
